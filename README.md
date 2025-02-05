@@ -1,0 +1,1 @@
+# SCPAI: Spectroscopic characterization of plasmas using artificial intelligence
