@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from eval import eval_model
-from model import SignalNN, SignalNNV2
+from model import SCPAI_H
 
 
 def main() -> None:
