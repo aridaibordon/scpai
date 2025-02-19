@@ -1,8 +1,11 @@
 import torch
 import numpy as np
 
+from torch.utils.data import DataLoader
 
-def eval_model(test_dataloader, model):
+
+def eval_model(model, test_dataset):
+    test_dataloader = DataLoader(test_dataset, 25000)
     nx, ny = next(iter(test_dataloader))
     with torch.no_grad():
         npred = model(nx)

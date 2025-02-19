@@ -1,3 +1,4 @@
+import os
 import torch
 
 import numpy as np
@@ -15,6 +16,9 @@ from model import SCPAI_H
 from train import train_loop
 
 
+MODEL_PATH = "data/model"
+
+
 def epoch_dict(epoch, loss_hist, mean, std):
     return {
         "t": epoch,
@@ -24,26 +28,27 @@ def epoch_dict(epoch, loss_hist, mean, std):
     }
 
 
-def main_loop(model, datasets, loss_fn, optimizer, device, model_name):
+def main_loop(model, datasets, loss_fn, optimizer, model_name):
     train_dataset, test_dataset = datasets
-    train_dataloader, test_dataloader = (
-        DataLoader(train_dataset, BATCH_SIZE, shuffle=True),
-        DataLoader(test_dataset, BATCH_SIZE, shuffle=True),
-    )
+    train_dataloader = DataLoader(train_dataset, BATCH_SIZE, shuffle=True)
 
     best = np.inf
     for t in range(EPOCHS):
         print(f"Epoch {t+1}")
         loss_hist = train_loop(train_dataloader, model, loss_fn, optimizer)
 
-        y, pred = eval_model(test_dataloader, model)
+        y, pred = eval_model(model, test_dataset)
         loss = np.power(y - pred, 2).sum()
 
         # save trained weights
-        torch.save(model.state_dict(), f"model/{model_name}.last.pth")
+        torch.save(
+            model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.last.pth")
+        )
         if loss < best:
             best = loss
-            torch.save(model.state_dict(), f"model/{model_name}.best.pth")
+            torch.save(
+                model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.best.pth")
+            )
 
         # create an overview report
         # run_data.append(epoch_dict(t + 1, loss_hist, loss))
@@ -54,10 +59,10 @@ def main_loop(model, datasets, loss_fn, optimizer, device, model_name):
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    # select model
     egrid = np.linspace(3000, 4500, 3000)
     signal = Signal_H(egrid, "S", fnoise=0.01)
 
-    # select model
     model = SCPAI_H(egrid).to(device)
 
     # load train and test datasets
@@ -69,8 +74,8 @@ def main():
     loss_fn = nn.MSELoss()
     optimizer = optin.Adam(model.parameters(), LEARNING_RATE)
 
-    # run model
-    main_loop(model, dataset_list, loss_fn, optimizer, device, "test")
+    # run training loop
+    main_loop(model, dataset_list, loss_fn, optimizer, model_name="test")
 
 
 if __name__ == "__main__":
