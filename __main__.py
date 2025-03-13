@@ -9,10 +9,10 @@ import torch.optim as optin
 from torch.utils.data import DataLoader
 
 from config import BATCH_SIZE, EPOCHS, LEARNING_RATE
-from csignal import Signal_H
+from spectrum import Signal_H
 from data import Dataset_H
 from eval import eval_model
-from model import SCPAI_H
+from model import SCPAI_H, SCPAI_H2
 from train import train_loop
 
 
@@ -60,10 +60,10 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # select model
-    egrid = np.linspace(3000, 4500, 3000)
-    signal = Signal_H(egrid, "S", fnoise=0.01)
+    egrid = np.linspace(3500, 4300, 800)
+    signal = Signal_H(egrid, geometry="S", fnoise=0.01)
 
-    model = SCPAI_H(egrid).to(device)
+    model = SCPAI_H2(egrid).to(device)
 
     # load train and test datasets
     dataset_list = [
@@ -75,7 +75,8 @@ def main():
     optimizer = optin.Adam(model.parameters(), LEARNING_RATE)
 
     # run training loop
-    main_loop(model, dataset_list, loss_fn, optimizer, model_name="test")
+    main_loop(model, dataset_list, loss_fn, optimizer, model_name="omega2007_2")
+
 
 
 if __name__ == "__main__":

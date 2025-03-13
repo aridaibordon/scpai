@@ -17,10 +17,10 @@ def eval_model(model, test_dataset):
 
 
 def denormalize_output(output):
-    nTe, nrho, nlength = output.T
+    nTe, nrho = output.T
 
     Te = 4500 * nTe + 500
     rho = 10 ** (3 * nrho + 22)
-    clength = 80e-4 * nlength + 20e-4
+    # clength = 80e-4 * nlength + 20e-4
 
-    return np.array([Te, rho, clength]).T
+    return np.array([Te, rho]).T
