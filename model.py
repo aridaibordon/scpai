@@ -15,11 +15,37 @@ class SCPAI_H(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Linear(512, 3),
+            nn.Linear(512, 2),
         )
 
     def forward(self, x):
         return self.model(x)
+    
+
+class SCPAI_H2(nn.Module):
+    def __init__(self, egrid: list) -> None:
+        super().__init__()
+
+        self.name = "SCPAI_H"
+        self.description = "SCPAI for homogeneous plasmas"
+
+        self.model = nn.Sequential(
+            nn.Linear(len(egrid), 1024),
+            nn.ReLU(),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 2),
+        )
+
+    def forward(self, x):
+        return self.model(x)
+
 
 
 class SCPAI_MZ(nn.Module):

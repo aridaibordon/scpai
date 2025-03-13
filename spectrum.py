@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as rd
 
-from filter import apply_instrument_resolution
+from post import apply_instrument_resolution
 
 
 INS_RESOLUTION = 10  # eV
@@ -49,10 +49,27 @@ class Signal_H:
                 )
             )
 
-        signal = signal / max(signal)
+        # signal = signal / max(signal)
         if self.fnoise:
-            noise = self.fnoise * (2 * rd.random(len(signal)) - 1)
+            noise = self.fnoise * max(signal) * (2 * rd.random(len(signal)) - 1)
             signal += noise
 
         signal = apply_instrument_resolution(egrid, signal, INS_RESOLUTION / 2.355)
         return (signal - min(signal)) / (max(signal) - min(signal))
+
+
+class Signal_MZ:
+    def __init__(self, egrid: list, geometry: str, nzones: int, fnoise: float):
+        self.egrid = egrid
+
+        self.nzones = nzones
+        self.fnoise = fnoise
+
+        valid_geometries = ["P"]
+        if geometry not in valid_geometries:
+            raise Exception(f"Geometry symbol {geometry} not recognized.")
+
+        self.geometry = geometry
+    
+    def get_nsignal(self, fname_list: list, clength: float):
+        pass

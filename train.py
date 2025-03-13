@@ -2,7 +2,7 @@ import torch
 
 import numpy as np
 
-from config import BATCH_SIZE
+from scpai.config import BATCH_SIZE
 
 
 def train_loop(dataloader, model, loss_fn, optimizer) -> list[float]:
