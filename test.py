@@ -2,36 +2,22 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
-from torch.utils.data import DataLoader
+from os.path import join
 
-from scpai.config import BATCH_SIZE
-from spectrum import Signal_H
 from scpai.data import Dataset_H
 from scpai.eval import eval_model
-from scpai.model import SCPAI_H, SCPAI_H2
+from scpai.model import load_model
+from scpai.spectrum import Signal_H
+
+
+RESULTS_PATH = "data/results"
+MODEL_NAME = "H003_n1"
 
 
 def main() -> None:
-    """
-    MODEL_PATH = "data/model/omega2007_2.last.pth"
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    egrid = np.linspace(3500, 4300, 800)
-    signal = Signal_H(egrid, "S", fnoise=0.01)
-
-    test_dataset = Dataset_H(device, signal, train=False)
-    test_dataloader = DataLoader(test_dataset, 1, shuffle=True)
-
-    model = SCPAI_H2(egrid).to(device)
-    model.load_state_dict(torch.load(MODEL_PATH, weights_only=True))
-
-    y, pred = eval_model(model, test_dataset)
-
-    with open("data/comp_2.txt", "w") as f:
-        np.savetxt(f, np.array([*y.T, *pred.T]).T, 2 * "%7.2f %.4e ")
-    """
-
-    (t_data, rho_data, t_pred, rho_pred) = np.loadtxt("data/comp.txt", dtype=float).T
+    (t_data, rho_data, t_pred, rho_pred) = np.loadtxt(
+        f"{join(RESULTS_PATH, MODEL_NAME)}.txt", dtype=float
+    ).T
 
     mask = t_data < 3000
 

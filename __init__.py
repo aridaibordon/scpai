@@ -1,8 +1,8 @@
 import os, inspect
 
-from spectrum import Signal_H
+from scpai.spectrum import Signal_H
 from scpai.data import get_file_attr
-from scpai.model import SCPAI_H, SCPAI_H2
+from scpai.model import SCPAI_H
 
 
 def get_scpai_path():

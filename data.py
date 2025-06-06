@@ -2,11 +2,12 @@ import os
 import torch
 
 import numpy as np
+import numpy.random as rd
 
 from os.path import join
 from torch.utils.data import Dataset
 
-from spectrum import Signal_H, Signal_MZ
+from scpai.spectrum import Signal_H, Signal_MZ
 
 DATA_PATH = "data/"
 
@@ -25,7 +26,13 @@ def get_file_attr(path: str) -> tuple[int]:
 
 
 class Dataset_H(Dataset):
-    def __init__(self, device: str, signal: Signal_H, train: bool) -> None:
+    def __init__(
+        self,
+        device: str,
+        signal: Signal_H,
+        train: bool,
+        assume_mass_conservation: bool = True,
+    ) -> None:
         self.device = device
 
         self.path = join(DATA_PATH, "train" if train else "test")
@@ -35,6 +42,8 @@ class Dataset_H(Dataset):
 
         self.signal = signal
 
+        self.assume_mass_conservation = assume_mass_conservation
+
     def __len__(self) -> int:
         return len(os.listdir(self.path))
 
@@ -42,9 +51,10 @@ class Dataset_H(Dataset):
         fname = np.sort(os.listdir(self.path))[index]
         t_elec, d_elec = get_file_attr(fname)
 
-        clength = self.estimate_characteristic_length(
-            t_elec, d_elec
-        )
+        if self.assume_mass_conservation:
+            clength = self.estimate_characteristic_length(t_elec, d_elec)
+        else:
+            clength = 80e-4 * rd.uniform() + 20e-4
 
         nsignal = self.signal.get_nsignal(fname=join(self.path, fname), clength=clength)
 
@@ -64,7 +74,7 @@ class Dataset_H(Dataset):
         to = 300
         kb = 1.3806503e-23
 
-        p_d2_si = 0.072 * 101325
+        p_d2_si = p_d2 * 101325
         d_elec_si = d_elec * 1e6
         zbar = 16  # approximated zbar in conditions range
 
@@ -101,10 +111,3 @@ class Dataset_MZ(Dataset):
     def __getitem__(self, index) -> tuple[torch.Tensor]:
         sel_Te = np.random.choice(len(self.data_Te))
         sel_dne = np.random.choice(len(self.data_Te))
-
-
-def get_datasets_h(device, signal):
-    return (
-        Dataset_H(device, signal, train=True),
-        Dataset_H(device, signal, train=False),
-    )

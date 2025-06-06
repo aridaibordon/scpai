@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as rd
 
-from post import apply_instrument_resolution
+from scpai.post import apply_instrument_resolution
 
 
 INS_RESOLUTION = 10  # eV
@@ -15,7 +15,7 @@ def load_radiative_properties_file(fname: str):
     for key, row in zip(keys, raw_data[:-2]):
         data[key] = row
 
-    return data["E"], data["bb"], data["opa"]
+    return data["E"], data["bb"] + data["bf"], data["opa"]
 
 
 class Signal_H:
@@ -30,18 +30,18 @@ class Signal_H:
         self.geometry = geometry
 
     def get_nsignal(self, fname: str, clength: float):
-        egrid, j_bb, k = load_radiative_properties_file(fname)
+        egrid, j, k = load_radiative_properties_file(fname)
 
-        j_bb = np.interp(self.egrid, egrid, j_bb)
+        j = np.interp(self.egrid, egrid, j)
         k = np.interp(self.egrid, egrid, k)
 
         if self.geometry == "P":
-            signal = (j_bb / k) * (1 - np.exp(-k * clength))
+            signal = (j / k) * (1 - np.exp(-k * clength))
         elif self.geometry == "S":
             signal = (
                 np.pi
                 * clength**2
-                * (j_bb / k)
+                * (j / k)
                 * (
                     1
                     + np.exp(-2 * k * clength) / (k * clength)
@@ -49,10 +49,9 @@ class Signal_H:
                 )
             )
 
-        # signal = signal / max(signal)
-        if self.fnoise:
-            noise = self.fnoise * max(signal) * (2 * rd.random(len(signal)) - 1)
-            signal += noise
+        # noise = self.fnoise * max(signal) * (2 * rd.random(len(signal)) - 1)
+        noise = rd.normal(loc=0, scale=self.fnoise * max(signal))
+        signal += noise
 
         signal = apply_instrument_resolution(egrid, signal, INS_RESOLUTION / 2.355)
         return (signal - min(signal)) / (max(signal) - min(signal))
@@ -70,6 +69,14 @@ class Signal_MZ:
             raise Exception(f"Geometry symbol {geometry} not recognized.")
 
         self.geometry = geometry
-    
+
     def get_nsignal(self, fname_list: list, clength: float):
-        pass
+        nzones = len(fname_list)
+
+        egrid, j, k = np.array(
+            [load_radiative_properties_file(fname) for fname in fname_list]
+        ).T
+
+        signal = np.zeros(len(egrid))
+        for ind in range(nzones):
+            j[ind] / k[ind] * (1 - np.exp(-k[ind] * clength))

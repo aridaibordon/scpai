@@ -9,7 +9,7 @@ from os.path import isfile, join
 # Learning parameters
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 10
+EPOCHS = 3
 
 # Signal to noise factor
 NOISE_FACTOR = 0.01
