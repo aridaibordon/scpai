@@ -2,7 +2,7 @@ import os, inspect
 
 from scpai.spectrum import Signal_H
 from scpai.data import get_file_attr
-from scpai.model import SCPAI_H
+from scpai.model import load_model
 
 
 def get_scpai_path():

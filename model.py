@@ -5,11 +5,11 @@ import torch.nn as nn
 
 from os.path import join
 
-from spectrum import Signal_H, Signal_MZ
+from scpai.config import MODEL_PATH
 
 
 class SCPAI_H(nn.Module):
-    def __init__(self, egrid: list, layer_list: list, n_outputs: int=2) -> None:
+    def __init__(self, egrid: list, layer_list: list, n_outputs: int = 2) -> None:
         super().__init__()
 
         self.name = "SCPAI_H"
@@ -59,9 +59,8 @@ def generate_model_description(model_gen, egrid, layer_list, weights_path):
     }
 
 
-MODEL_PATH = "data/model"
 MODEL_DATABASE = {
-    "H000": generate_model_description(
+    "H000_n1": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
         [512, 512, 512],
@@ -78,12 +77,6 @@ MODEL_DATABASE = {
         np.linspace(3500, 4300, 800),
         [512, 512, 512, 512, 512],
         "H_f003_n2.pth",
-    ),
-    "H005_u": generate_model_description(
-        SCPAI_H,
-        np.linspace(3500, 4300, 800),
-        [512, 512, 512],
-        "H_f005_u1.pth",
     ),
 }
 

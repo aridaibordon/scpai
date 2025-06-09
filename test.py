@@ -4,13 +4,13 @@ import numpy as np
 
 from os.path import join
 
+from scpai.config import RESULTS_PATH
 from scpai.data import Dataset_H
 from scpai.eval import eval_model
 from scpai.model import load_model
 from scpai.spectrum import Signal_H
 
 
-RESULTS_PATH = "data/results"
 MODEL_NAME = "H003_n1"
 
 

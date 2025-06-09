@@ -9,21 +9,18 @@ import torch.optim as optin
 
 from torch.utils.data import DataLoader
 
-from scpai.config import BATCH_SIZE, EPOCHS, LEARNING_RATE
+from scpai.config import MODEL_PATH, BATCH_SIZE, EPOCHS, LEARNING_RATE
 from scpai.spectrum import Signal_H
 from scpai.data import Dataset_H
-from scpai.eval import eval_model
+from scpai.eval import make_dataset_prediction
 from scpai.model import SCPAI_H, load_model
 from scpai.train import train_loop
 
 
-MODEL_PATH = "data/model"
-
-
-def epoch_dict(epoch, loss_hist):
+def epoch_dict(epoch, loss):
     return {
         "t": epoch,
-        "loss": loss_hist,
+        "loss": loss,
     }
 
 
@@ -36,9 +33,9 @@ def main_loop(model, datasets, loss_fn, optimizer, model_name):
     best = np.inf
     for t in range(EPOCHS):
         print(f"Epoch {t+1}")
-        loss_hist = train_loop(train_dataloader, model, loss_fn, optimizer)
+        train_loop(train_dataloader, model, loss_fn, optimizer)
 
-        y, pred = eval_model(model, test_dataset, normalized_output=True)
+        y, pred = make_dataset_prediction(model, test_dataset, normalized_output=True)
         loss = np.power(y - pred, 2).sum()
 
         # save trained weights
@@ -48,11 +45,11 @@ def main_loop(model, datasets, loss_fn, optimizer, model_name):
         if loss < best:
             best = loss
             torch.save(
-                model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.best.pth")
+                model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.pth")
             )
 
         # create an overview report
-        run_data.append(epoch_dict(t + 1, loss_hist))
+        run_data.append(epoch_dict(t + 1, loss))
         with open(f"{model_name}.json", "w") as f:
             json.dump(run_data, f)
 
@@ -76,7 +73,7 @@ def main():
     optimizer = optin.Adam(model.parameters(), LEARNING_RATE)
 
     # run training loop
-    main_loop(model, dataset_list, loss_fn, optimizer, model_name="H_f003_n1_NOMC")
+    main_loop(model, dataset_list, loss_fn, optimizer, model_name="H_f003_n1_NMC")
 
 
 if __name__ == "__main__":

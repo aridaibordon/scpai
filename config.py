@@ -6,10 +6,17 @@ import numpy.random as rd
 from os.path import isfile, join
 
 
+GLOBAL_PATH = "/home/aridai/PhD/research/projects/scpai"
+
+MODEL_PATH = join(GLOBAL_PATH, "data/model")
+DATA_PATH = join(GLOBAL_PATH, "data")
+RESULTS_PATH = join(GLOBAL_PATH, "data/results")
+
+
 # Learning parameters
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 3
+EPOCHS = 20
 
 # Signal to noise factor
 NOISE_FACTOR = 0.01

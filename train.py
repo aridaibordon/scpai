@@ -9,12 +9,12 @@ def train_loop(dataloader, model, loss_fn, optimizer) -> list[float]:
     model.train()
     size = len(dataloader.dataset)
 
-    loss_hist = []
+    # loss_hist = []
     best = np.inf
     for batch, (x, y) in enumerate(dataloader):
         pred = model(x)
         loss = loss_fn(pred, y)
-        loss_hist.append(loss.item() / BATCH_SIZE)
+        # loss_hist.append(loss.item() / BATCH_SIZE)
 
         if loss.item() / BATCH_SIZE < best:
             best = loss.item() / BATCH_SIZE
@@ -27,7 +27,7 @@ def train_loop(dataloader, model, loss_fn, optimizer) -> list[float]:
             loss, current = loss.item() / BATCH_SIZE, batch * BATCH_SIZE + len(x)
             print(f"\tloss: {loss:.4e}  best: {best:.4e}  [{current:>6d}/{size:>6d}]")
     
-    return loss_hist
+    # return loss_hist
 
 
 def test_loop(dataloader, model, loss_fn):

@@ -4,12 +4,10 @@ import numpy as np
 from os.path import join
 from torch.utils.data import DataLoader
 
+from scpai.config import RESULTS_PATH
 from scpai.data import Dataset_H
 from scpai.model import MODEL_DATABASE, load_model
 from scpai.spectrum import Signal_H
-
-
-RESULTS_PATH = "data/results"
 
 
 def make_prediction(model, signal, normalized_output: bool = False):
@@ -49,7 +47,7 @@ def denormalize_output(output):
     return np.array([Te, rho]).T
 
 
-def eval_model(model_name, fnoise):
+def eval_model(model_name, fnoise, normalized_output: bool = True):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = load_model(model_name)

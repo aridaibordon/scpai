@@ -7,9 +7,8 @@ import numpy.random as rd
 from os.path import join
 from torch.utils.data import Dataset
 
+from scpai.config import DATA_PATH
 from scpai.spectrum import Signal_H, Signal_MZ
-
-DATA_PATH = "data/"
 
 
 def get_file_attr(path: str) -> tuple[int]:
