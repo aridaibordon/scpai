@@ -10,22 +10,28 @@ from scpai.model import MODEL_DATABASE, load_model
 from scpai.spectrum import Signal_H
 
 
-def make_prediction(model, signal, normalized_output: bool = False):
-    print(signal)
+def predict(x_exp, y_exp, model_name):
+    egrid = MODEL_DATABASE[model_name]["egrid"]
+
+    model = load_model(model_name, device="cpu")
+
+    signal = np.interp(egrid, x_exp, y_exp)
+
+    y_norm = torch.from_numpy(
+        (signal - min(signal)) / (max(signal) - min(signal))
+    ).float()
+
     with torch.no_grad():
-        npred = model(signal)
+        n_pred = model(y_norm)
 
-    ny, npred = ny.cpu().numpy(), npred.cpu().numpy()
-    if normalized_output:
-        return ny, npred
-
-    y, pred = denormalize_output(ny), denormalize_output(npred)
-    return y, pred
+    return denormalize_output(n_pred)
 
 
 def make_dataset_prediction(model, test_dataset, normalized_output: bool = False):
     test_dataloader = DataLoader(test_dataset, 25000)
     nx, ny = next(iter(test_dataloader))
+
+    model.eval()
     with torch.no_grad():
         npred = model(nx)
 
@@ -54,7 +60,7 @@ def eval_model(model_name, fnoise, normalized_output: bool = True):
 
     egrid = MODEL_DATABASE[model_name]["egrid"]
     signal = Signal_H(egrid, "S", fnoise)
-    test_dataset = Dataset_H(device, signal, train=False)
+    test_dataset = Dataset_H(device, signal, mode=False)
 
     y, pred = make_dataset_prediction(model, test_dataset)
 

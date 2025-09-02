@@ -27,14 +27,21 @@ def get_file_attr(path: str) -> tuple[int]:
 class Dataset_H(Dataset):
     def __init__(
         self,
-        device: str,
         signal: Signal_H,
-        train: bool,
+        mode: str,
         assume_mass_conservation: bool = True,
+        device: str | None = None,
     ) -> None:
-        self.device = device
+        allowed_modes = ["train", "test"]
+        if mode not in allowed_modes:
+            raise ValueError(f"{mode} is not a valid mode.")
 
-        self.path = join(DATA_PATH, "train" if train else "test")
+        if device:
+            self.device = device
+        else:
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self.path = join(DATA_PATH, mode)
 
         self.data_Te = np.loadtxt(join(DATA_PATH, "tab_tev.txt"), skiprows=1)
         self.data_dne = np.loadtxt(join(DATA_PATH, "tab_dne.txt"), skiprows=1)
@@ -53,7 +60,7 @@ class Dataset_H(Dataset):
         if self.assume_mass_conservation:
             clength = self.estimate_characteristic_length(t_elec, d_elec)
         else:
-            clength = 80e-4 * rd.uniform() + 20e-4
+            clength = 130e-4 * rd.uniform() + 20e-4
 
         nsignal = self.signal.get_nsignal(fname=join(self.path, fname), clength=clength)
 

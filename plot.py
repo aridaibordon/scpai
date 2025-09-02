@@ -35,8 +35,8 @@ def plot_training_evol(path):
 def plot_loss(path):
     with open(path, "r") as f:
         data = json.load(f)
-    
-    plt.plot(data[-1]["loss"], '.')
+
+    plt.plot(data[-1]["loss"], ".")
     plt.yscale("log")
     plt.savefig("test.png")
 

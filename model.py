@@ -43,7 +43,7 @@ class SCPAI_MZ(nn.Module):
             nn.ReLU(),
             nn.Linear(512, 512),
             nn.ReLU(),
-            nn.Linear(512, 3 * nzones),
+            nn.Linear(512, 2 * nzones),
         )
 
     def forward(self, x):
@@ -60,29 +60,39 @@ def generate_model_description(model_gen, egrid, layer_list, weights_path):
 
 
 MODEL_DATABASE = {
-    "H000_n1": generate_model_description(
+    "Ar_H000_n1_MC": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
         [512, 512, 512],
-        "H_f000_n1.pth",
+        "Ar_H_f000_n1.pth",
     ),
-    "H003_n1": generate_model_description(
+    "Ar_H003_n1_MC": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
         [512, 512, 512],
-        "H_f003_n1.pth",
+        "Ar_H_f003_n1.pth",
     ),
-    "H003_n2": generate_model_description(
+    "Ar_H003_n2_MC": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
         [512, 512, 512, 512, 512],
-        "H_f003_n2.pth",
+        "Ar_H_f003_n2.pth",
+    ),
+    "Ar_H003_n2_NMC": generate_model_description(
+        SCPAI_H,
+        np.linspace(3500, 4300, 800),
+        [1024, 1024, 1024, 512],
+        "Ar_H_f003_n2_NMC.pth",
     ),
 }
 
 
-def load_model(model_name: str):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+def load_model(model_name: str, device: str | None = None):
+    if model_name not in MODEL_DATABASE.keys():
+        raise KeyError(f"{model_name} is not a valid model.")
+
+    if not device:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model_data = MODEL_DATABASE[model_name]
     model_gen, egrid, layer_list, weights_path = (

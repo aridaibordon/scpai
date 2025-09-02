@@ -1,5 +1,7 @@
-import os, inspect
+import os
+import inspect
 
+from scpai.eval import predict
 from scpai.spectrum import Signal_H
 from scpai.data import get_file_attr
 from scpai.model import load_model

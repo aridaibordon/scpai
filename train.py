@@ -1,20 +1,56 @@
+import json
 import torch
+import os
 
 import numpy as np
 
-from scpai.config import BATCH_SIZE
+from torch.utils.data import DataLoader
+
+from scpai.config import BATCH_SIZE, MODEL_PATH, EPOCHS
+from scpai.eval import make_dataset_prediction
 
 
-def train_loop(dataloader, model, loss_fn, optimizer) -> list[float]:
+def epoch_dict(epoch, loss):
+    return {
+        "t": epoch,
+        "loss": loss,
+    }
+
+
+def train_loop(model, datasets, loss_fn, optimizer, model_name):
+    train_dataset, test_dataset = datasets
+    train_dataloader = DataLoader(train_dataset, BATCH_SIZE, shuffle=True)
+
+    run_data = []
+
+    best = np.inf
+    for t in range(EPOCHS):
+        print(f"Epoch {t + 1}")
+        train_epoch(train_dataloader, model, loss_fn, optimizer)
+
+        y, pred = make_dataset_prediction(model, test_dataset, normalized_output=True)
+        loss = np.power(y - pred, 2).sum()
+
+        if loss < best:
+            best = loss
+            torch.save(
+                model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.pth")
+            )
+
+        # create an overview report
+        run_data.append(epoch_dict(t + 1, float(loss)))
+        with open(f"{model_name}.json", "w") as f:
+            json.dump(run_data, f)
+
+
+def train_epoch(dataloader, model, loss_fn, optimizer) -> list[float]:
     model.train()
     size = len(dataloader.dataset)
 
-    # loss_hist = []
     best = np.inf
     for batch, (x, y) in enumerate(dataloader):
         pred = model(x)
         loss = loss_fn(pred, y)
-        # loss_hist.append(loss.item() / BATCH_SIZE)
 
         if loss.item() / BATCH_SIZE < best:
             best = loss.item() / BATCH_SIZE
@@ -26,19 +62,3 @@ def train_loop(dataloader, model, loss_fn, optimizer) -> list[float]:
         if batch % 10 == 0:
             loss, current = loss.item() / BATCH_SIZE, batch * BATCH_SIZE + len(x)
             print(f"\tloss: {loss:.4e}  best: {best:.4e}  [{current:>6d}/{size:>6d}]")
-    
-    # return loss_hist
-
-
-def test_loop(dataloader, model, loss_fn):
-    model.eval()
-
-    num_batches = len(dataloader)
-    loss = 0
-    with torch.no_grad():
-        for x, y in dataloader:
-            pred = model(x)
-            loss += loss_fn(pred, y).item() / BATCH_SIZE
-
-    loss /= num_batches
-    print(f"Test Error: Avg loss: {loss:.4e}")
