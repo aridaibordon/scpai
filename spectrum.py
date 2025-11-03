@@ -2,6 +2,7 @@ import numpy as np
 import numpy.random as rd
 import scipy.signal as sgn
 
+from scpai.mz import compute_mz_cylindrical_signal
 
 INS_RESOLUTION = 10  # eV
 
@@ -56,7 +57,7 @@ class Signal_H:
             )
 
         # noise = self.fnoise * max(signal) * (2 * rd.random(len(signal)) - 1)
-        noise = rd.normal(loc=0, scale=self.fnoise * max(signal))
+        noise = rd.normal(loc=0, scale=self.fnoise * max(signal), size=len(self.egrid))
         signal += noise
 
         signal = apply_instrument_resolution(egrid, signal, INS_RESOLUTION / 2.355)
@@ -70,19 +71,38 @@ class Signal_MZ:
         self.nzones = nzones
         self.fnoise = fnoise
 
-        valid_geometries = ["P"]
+        valid_geometries = ["C"]
         if geometry not in valid_geometries:
             raise Exception(f"Geometry symbol {geometry} not recognized.")
 
         self.geometry = geometry
 
     def get_nsignal(self, fname_list: list, clength: float):
-        nzones = len(fname_list)
+        if self.nzones != len(fname_list):
+            raise ValueError(
+                f"Number of zones {self.nzones} must coincide with file list size {len(fname_list)}"
+            )
 
         egrid, j, k = np.array(
-            [load_radiative_properties_file(fname) for fname in fname_list]
+            [
+                np.asarray(load_radiative_properties_file(fname)).T
+                for fname in fname_list
+            ]
         ).T
 
+        j = np.array([np.interp(self.egrid, egrid.T[0], j_zone) for j_zone in j.T])
+        k = np.array([np.interp(self.egrid, egrid.T[0], k_zone) for k_zone in k.T])
+
         signal = np.zeros(len(egrid))
-        for ind in range(nzones):
-            j[ind] / k[ind] * (1 - np.exp(-k[ind] * clength))
+        if self.geometry == "C":
+            signal = compute_mz_cylindrical_signal(
+                self.nzones, self.egrid, j, k, clength
+            )
+
+        signal = np.sum(signal, axis=0)
+
+        noise = rd.normal(loc=0, scale=self.fnoise * max(signal))
+        signal += noise
+
+        signal = apply_instrument_resolution(egrid.T[0], signal, INS_RESOLUTION / 2.355)
+        return (signal - min(signal)) / (max(signal) - min(signal))

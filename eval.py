@@ -53,7 +53,7 @@ def denormalize_output(output):
     return np.array([Te, rho]).T
 
 
-def eval_model(model_name, fnoise, normalized_output: bool = True):
+def eval_model(model_name, fnoise):
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = load_model(model_name)
@@ -67,8 +67,8 @@ def eval_model(model_name, fnoise, normalized_output: bool = True):
     with open(join(RESULTS_PATH, model_name), "w") as f:
         np.savetxt(f, np.array([*y.T, *pred.T]).T, 2 * "%7.2f %.4e ")
 
-    np.loadtxt(f"{join(RESULTS_PATH, model_name)}", dtype=float).T
+    # return np.loadtxt(f"{join(RESULTS_PATH, model_name)}", dtype=float).T
 
 
 if __name__ == "__main__":
-    eval_model("H003_n1", fnoise=0)
+    eval_model("paper_Ar_H_f000", fnoise=0)

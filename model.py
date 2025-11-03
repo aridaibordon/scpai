@@ -30,21 +30,21 @@ class SCPAI_H(nn.Module):
 
 
 class SCPAI_MZ(nn.Module):
-    def __init__(self, egrid: list, nzones: int) -> None:
+    def __init__(self, egrid: list, nzones: int, layer_list: list) -> None:
         super().__init__()
 
         self.name = "SCPAI_MZ"
         self.description = f"SCPAI for multizone analysis ({nzones} zones)"
 
-        self.model = nn.Sequential(
-            nn.Linear(len(egrid), 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 2 * nzones),
-        )
+        nn_sequence, layer_size = [], len(egrid)
+        for layer in layer_list:
+            nn_sequence.append(nn.Linear(layer_size, layer))
+            nn_sequence.append(nn.ReLU())
+            layer_size = layer
+
+        nn_sequence.append(nn.Linear(layer_size, 2 * nzones))
+
+        self.model = nn.Sequential(*nn_sequence)
 
     def forward(self, x):
         return self.model(x)
@@ -60,29 +60,41 @@ def generate_model_description(model_gen, egrid, layer_list, weights_path):
 
 
 MODEL_DATABASE = {
-    "Ar_H000_n1_MC": generate_model_description(
+    "paper_Ar_H000": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
         [512, 512, 512],
-        "Ar_H_f000_n1.pth",
+        "paper/Ar_H_f000.pth",
     ),
-    "Ar_H003_n1_MC": generate_model_description(
+    "paper_Ar_H003": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
         [512, 512, 512],
-        "Ar_H_f003_n1.pth",
+        "paper/Ar_H_f003.pth",
     ),
-    "Ar_H003_n2_MC": generate_model_description(
+    "paper_Ar_H005": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
-        [512, 512, 512, 512, 512],
-        "Ar_H_f003_n2.pth",
+        [512, 512, 512],
+        "paper/Ar_H_f005.pth",
     ),
-    "Ar_H003_n2_NMC": generate_model_description(
+    "paper_Ar_H010": generate_model_description(
         SCPAI_H,
         np.linspace(3500, 4300, 800),
-        [1024, 1024, 1024, 512],
-        "Ar_H_f003_n2_NMC.pth",
+        [512, 512, 512],
+        "paper/Ar_H_f010.pth",
+    ),
+    "paper_Ar_H015": generate_model_description(
+        SCPAI_H,
+        np.linspace(3500, 4300, 800),
+        [512, 512, 512],
+        "paper/Ar_H_f015.pth",
+    ),
+    "paper_Ar_H020": generate_model_description(
+        SCPAI_H,
+        np.linspace(3500, 4300, 800),
+        [512, 512, 512],
+        "paper/Ar_H_f020.pth",
     ),
 }
 

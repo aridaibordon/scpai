@@ -25,7 +25,7 @@ def train_loop(model, datasets, loss_fn, optimizer, model_name):
 
     best = np.inf
     for t in range(EPOCHS):
-        print(f"Epoch {t + 1}")
+        print(f"Epoch {t + 1} ({model_name})")
         train_epoch(train_dataloader, model, loss_fn, optimizer)
 
         y, pred = make_dataset_prediction(model, test_dataset, normalized_output=True)
