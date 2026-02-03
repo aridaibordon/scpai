@@ -107,7 +107,8 @@ AUTOENCODER_DATABASE: Dict[str, AutoencoderConfig] = {
         np.linspace(3500, 4300, 801),
         [16, 8, 4],
         "autoencoder/test_4.pth",
-    ),}
+    ),
+}
 
 
 def load_autoencoder(
@@ -155,7 +156,7 @@ def main():
         dataset_list,
         loss_fn,
         optimizer,
-        model_name=f"autoencoder_test",
+        model_name="autoencoder_test",
     )
 
 

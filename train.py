@@ -24,23 +24,21 @@ def train_loop(model, datasets, loss_fn, optimizer, model_name):
     run_data = []
 
     best = np.inf
-    for t in range(EPOCHS):
-        print(f"Epoch {t + 1} ({model_name})")
+    for t in range(1, EPOCHS + 1):
+        print(f"Epoch {t} ({model_name})")
         train_epoch(train_dataloader, model, loss_fn, optimizer)
 
-        y, pred = make_dataset_prediction(model, test_dataset, normalized_output=True)
-        loss = np.power(y - pred, 2).sum()
+        # y, pred = make_dataset_prediction(model, test_dataset, normalized_output=True)
+        # loss = loss_fn(torch.from_numpy(pred), torch.from_numpy(y))
 
-        if loss < best:
-            best = loss
-            torch.save(
-                model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.pth")
-            )
+        # if loss.item() < best:
+        # best = loss
+        torch.save(model.state_dict(), os.path.join(MODEL_PATH, f"{model_name}.pth"))
 
         # create an overview report
-        run_data.append(epoch_dict(t + 1, float(loss)))
-        with open(f"{model_name}.json", "w") as f:
-            json.dump(run_data, f)
+        # run_data.append(epoch_dict(t + 1, float(loss)))
+        # with open(f"{model_name}.json", "w") as f:
+        #     json.dump(run_data, f)
 
 
 def train_epoch(dataloader, model, loss_fn, optimizer) -> list[float]:
@@ -61,4 +59,4 @@ def train_epoch(dataloader, model, loss_fn, optimizer) -> list[float]:
 
         if batch % 10 == 0:
             loss, current = loss.item() / BATCH_SIZE, batch * BATCH_SIZE + len(x)
-            print(f"\tloss: {loss:.4e}  best: {best:.4e}  [{current:>6d}/{size:>6d}]")
+            print(f"\tlast: {loss:.4e}  best: {best:.4e}  [{current:>6d}/{size:>6d}]")

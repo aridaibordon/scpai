@@ -1,24 +1,23 @@
-import os
+import os.path
 
 import numpy as np
 import numpy.random as rd
 
-from os.path import isfile, join
+GLOBAL_PATH = "/home/aridai/Projects/scpai"
 
-
-GLOBAL_PATH = "/home/aridai/PhD/research/projects/scpai"
 
 def get_data_path(specie: str):
-    return join(GLOBAL_PATH, "data/signal", specie)
+    return os.path.join(GLOBAL_PATH, "data/signal", specie)
 
-MODEL_PATH = join(GLOBAL_PATH, "data/model")
-RESULTS_PATH = join(GLOBAL_PATH, "data/results")
+
+MODEL_PATH = os.path.join(GLOBAL_PATH, "data/model")
+RESULTS_PATH = os.path.join(GLOBAL_PATH, "data/results")
 
 
 # Learning parameters
 LEARNING_RATE = 1e-3
 BATCH_SIZE = 64
-EPOCHS = 10
+EPOCHS = 1
 
 # Signal to noise factor
 NOISE_FACTOR = 0.01
@@ -33,9 +32,18 @@ ENERGY_INTERVALS = [
 ]
 
 
+def load_parameter_grid(specie: str):
+    return (
+        np.loadtxt(os.path.join(get_data_path(specie), "tab_tev.txt"), skiprows=1),
+        np.loadtxt(os.path.join(get_data_path(specie), "tab_dne.txt"), skiprows=1),
+    )
+
+
 def create_data():
     dfiles = [
-        fname for fname in os.listdir("data/data") if isfile(join("data/data", fname))
+        fname
+        for fname in os.listdir("data/data")
+        if os.path.isfile(os.path.join("data/data", fname))
     ]
     dfiles = np.asarray(dfiles)
 
@@ -43,6 +51,10 @@ def create_data():
     nfiles = len(dfiles)
     for ind, fname in enumerate(dfiles):
         if ind < 0.9 * nfiles:
-            os.system(f"mv {join('data/data', fname)} {join('data/train', fname)}")
+            os.system(
+                f"mv {os.path.join('data/data', fname)} {os.path.join('data/train', fname)}"
+            )
         else:
-            os.system(f"mv {join('data/data', fname)} {join('data/test', fname)}")
+            os.system(
+                f"mv {os.path.join('data/data', fname)} {os.path.join('data/test', fname)}"
+            )

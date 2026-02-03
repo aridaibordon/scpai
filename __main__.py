@@ -14,38 +14,45 @@ from scpai.train import train_loop
 
 
 def main_loop(fnoise: float):
-    uniform_case = True
+    nzones = 5
+
     specie = "Ar"
+    clength = 15e-4  # only used for multizone analysis
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    egrid = np.linspace(3500, 4300, 800)
+    egrid = np.linspace(3200, 4000, 1601)  # Ar case
+    # egrid = np.linspace(15200, 15600, 401) # Kr case
 
-    if uniform_case:
+    if nzones == 1:
         signal = Signal_H(egrid, geometry="S", fnoise=fnoise)
 
         dataset_list = [
             Dataset_H(
-                specie, signal, mode="train", assume_mass_conservation=True, device=device
+                specie,
+                signal,
+                mode="train",
+                assume_mass_conservation=False,
+                device=device,
             ),
             Dataset_H(
-                specie, signal, mode="test", assume_mass_conservation=True, device=device
+                specie,
+                signal,
+                mode="train",
+                assume_mass_conservation=False,
+                device=device,
             ),
         ]
 
         model = SCPAI_H(egrid, layer_list=[512, 512, 512]).to(device)
     else:
-        signal = Signal_MZ(egrid, geometry="C", nzones=3, fnoise=fnoise)
+        signal = Signal_MZ(egrid, geometry="C", nzones=nzones, fnoise=fnoise)
 
         dataset_list = [
-            Dataset_MZ(
-                specie, signal, mode="train", assume_mass_conservation=True, device=device
-            ),
-            Dataset_MZ(
-                specie, signal, mode="test", assume_mass_conservation=True, device=device
-            ),
+            Dataset_MZ(specie, signal, clength, device=device),
+            Dataset_MZ(specie, signal, clength, device=device),
         ]
 
-        model = SCPAI_MZ(egrid, nzones=3, layer_list=[512, 512, 512, 512, 512]).to(
+        model = SCPAI_MZ(egrid, nzones=nzones, layer_list=[1024, 1024, 1024, 1024]).to(
             device
         )
 
@@ -53,11 +60,17 @@ def main_loop(fnoise: float):
     optimizer = optin.Adam(model.parameters(), LEARNING_RATE)
 
     # run training loop
-    train_loop(model, dataset_list, loss_fn, optimizer, model_name=f"Ar_H_f{fnoise}_MC")
+    train_loop(
+        model,
+        dataset_list,
+        loss_fn,
+        optimizer,
+        model_name=f"Ar_MZ{nzones}_F{int(100 * fnoise):03d}_15um_nohea",
+    )
 
 
 def main():
-    for fnoise in [0.05]:
+    for fnoise in [0.10, 0.15, 0.20]:
         main_loop(fnoise=fnoise)
 
 

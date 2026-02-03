@@ -2,7 +2,7 @@ import numpy as np
 import numpy.random as rd
 import scipy.signal as sgn
 
-from scpai.mz import compute_mz_cylindrical_signal
+from scpai.mz import compute_mz_circular_signal
 
 INS_RESOLUTION = 10  # eV
 
@@ -15,7 +15,8 @@ def load_radiative_properties_file(fname: str):
     for key, row in zip(keys, raw_data[:-2]):
         data[key] = row
 
-    return data["E"], data["bb"] + data["bf"], data["opa"]
+    # return data["E"], data["bb"] + data["bf"], data["opa"]  # bb + bf signal
+    return data["E"], data["bb"], data["opa"]  # bb signal
 
 
 def apply_instrument_resolution(egrid, signal, delta_E: float):
@@ -56,7 +57,6 @@ class Signal_H:
                 )
             )
 
-        # noise = self.fnoise * max(signal) * (2 * rd.random(len(signal)) - 1)
         noise = rd.normal(loc=0, scale=self.fnoise * max(signal), size=len(self.egrid))
         signal += noise
 
@@ -71,7 +71,7 @@ class Signal_MZ:
         self.nzones = nzones
         self.fnoise = fnoise
 
-        valid_geometries = ["C"]
+        valid_geometries = ["S", "C"]
         if geometry not in valid_geometries:
             raise Exception(f"Geometry symbol {geometry} not recognized.")
 
@@ -93,16 +93,58 @@ class Signal_MZ:
         j = np.array([np.interp(self.egrid, egrid.T[0], j_zone) for j_zone in j.T])
         k = np.array([np.interp(self.egrid, egrid.T[0], k_zone) for k_zone in k.T])
 
-        signal = np.zeros(len(egrid))
         if self.geometry == "C":
-            signal = compute_mz_cylindrical_signal(
-                self.nzones, self.egrid, j, k, clength
-            )
+            signal = compute_mz_circular_signal(self.nzones, self.egrid, j, k, clength)
 
         signal = np.sum(signal, axis=0)
-
-        noise = rd.normal(loc=0, scale=self.fnoise * max(signal))
+        noise = rd.normal(loc=0, scale=self.fnoise * max(signal), size=len(self.egrid))
         signal += noise
 
         signal = apply_instrument_resolution(egrid.T[0], signal, INS_RESOLUTION / 2.355)
         return (signal - min(signal)) / (max(signal) - min(signal))
+
+    def get_contribution_by_zone(self, fname_list: list, clength: float):
+        if self.nzones != len(fname_list):
+            raise ValueError(
+                f"Number of zones {self.nzones} must coincide with file list size {len(fname_list)}"
+            )
+
+        egrid, j, k = np.array(
+            [
+                np.asarray(load_radiative_properties_file(fname)).T
+                for fname in fname_list
+            ]
+        ).T
+
+        j = np.array([np.interp(self.egrid, egrid.T[0], j_zone) for j_zone in j.T])
+        k = np.array([np.interp(self.egrid, egrid.T[0], k_zone) for k_zone in k.T])
+
+        signal = compute_mz_circular_signal(self.nzones, self.egrid, j, k, clength)
+        signal = apply_instrument_resolution(
+            egrid.T[0], np.sum(signal, axis=0), INS_RESOLUTION / 2.355
+        )
+
+        signal_by_zone = np.empty((self.nzones, len(self.egrid)))
+        for nzone in range(self.nzones):
+            j_aux = j.copy()
+            j_aux[nzone] = np.zeros_like(j[nzone])
+
+            if self.geometry == "C":
+                zone_signal = np.sum(
+                    compute_mz_circular_signal(
+                        self.nzones,
+                        self.egrid,
+                        j_aux,
+                        k,
+                        clength,
+                    ),
+                    axis=0,
+                )
+
+                zone_signal = apply_instrument_resolution(
+                    egrid.T[0], zone_signal, INS_RESOLUTION / 2.355
+                )
+
+                signal_by_zone[nzone] = signal - zone_signal
+
+        return signal_by_zone / np.max(signal)

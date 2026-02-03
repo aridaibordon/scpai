@@ -42,7 +42,7 @@ def get_atenuation_factor(j, k, clength, zone, subzone, nzones):
     return np.exp(-k * chord_length)
 
 
-def compute_mz_cylindrical_signal(
+def compute_mz_circular_signal(
     nzones: int, egrid: list, j: list, k: list, clength: float
 ):
     mz_signal = np.empty(nzones, dtype=object)
